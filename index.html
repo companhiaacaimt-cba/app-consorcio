@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Academia Consórcio</title>
   
-  <!-- Carregando React e Babel diretamente no navegador para funcionar sem servidor -->
   <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
   <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
@@ -17,7 +16,6 @@
 <body>
   <div id="root"></div>
 
-  <!-- Todo o seu código React está aqui dentro deste script -->
   <script type="text/babel">
     const { useState, useRef, useEffect } = React;
 
@@ -58,17 +56,40 @@ Aqui você pode:
 
       const sendMessage = async (text) => {
         if (!text.trim() || loading) return;
+        
         const userMsg = { role: "user", content: text };
-        setMessages((prev) => [...prev, userMsg]);
+        
+        // Pega o histórico atual e adiciona a nova mensagem do usuário
+        const newMessages = [...messages, userMsg];
+        
+        setMessages(newMessages);
         setInput("");
         setLoading(true);
 
-        // Simulando a resposta da API por agora para evitar erros de bloqueio (CORS) no frontend
-        setTimeout(() => {
-            const reply = "Nesta versão de demonstração, as minhas respostas estão limitadas. Para integrar a Inteligência Artificial completa, precisaremos de configurar o Backend (API) de forma segura!";
-            setMessages((prev) => [...prev, { role: "assistant", content: reply }]);
-            setLoading(false);
-        }, 1500);
+        try {
+          // Chamando a nossa nova ponte segura na Vercel
+          const response = await fetch('/api/chat', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ messages: newMessages })
+          });
+
+          const data = await response.json();
+
+          if (response.ok) {
+            // Adiciona a resposta real da DeepSeek na tela
+            setMessages((prev) => [...prev, { role: "assistant", content: data.reply }]);
+          } else {
+            // Se der erro (ex: chave errada, sem saldo), avisa na tela
+            setMessages((prev) => [...prev, { role: "assistant", content: "❌ Ocorreu um erro: " + (data.error || "Tente novamente.") }]);
+          }
+        } catch (error) {
+          setMessages((prev) => [...prev, { role: "assistant", content: "❌ Erro de conexão com o servidor." }]);
+        } finally {
+          setLoading(false);
+        }
       };
 
       const selectModule = async (mod) => {
