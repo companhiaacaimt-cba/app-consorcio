@@ -3,15 +3,24 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Academia Consórcio</title>
+  <title>Academia & Studio AI</title>
+  
+  <!-- Favicon do Escudo (Pode trocar o emoji se quiser) -->
   <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🛡️</text></svg>">
   
+  <!-- Carregando React e Babel -->
   <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
   <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
   
   <style>
     body { margin: 0; padding: 0; background: #080C18; color: white; }
+    * { box-sizing: border-box; }
+    /* Estilização da barra de rolagem */
+    ::-webkit-scrollbar { width: 8px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.2); }
   </style>
 </head>
 <body>
@@ -21,102 +30,122 @@
     const { useState, useRef, useEffect } = React;
 
     const MODULES = [
-      { id: 1, icon: "📚", title: "O que é Consórcio?", desc: "Fundamentos, história e como funciona", nivel: "Iniciante" },
-      { id: 2, icon: "⚙️", title: "Como Funciona na Prática", desc: "Grupos, assembleias, contemplação", nivel: "Iniciante" },
-      { id: 3, icon: "🏆", title: "Tipos de Lance", desc: "Lance livre, fixo, embutido e estratégias", nivel: "Intermediário" },
-      { id: 4, icon: "📊", title: "Comparativo Financeiro", desc: "Consórcio vs Financiamento vs À Vista", nivel: "Intermediário" },
-      { id: 5, icon: "🛡️", title: "Porto Seguro Consórcio", desc: "Produtos, diferenciais e regulamentação", nivel: "Avançado" },
-      { id: 6, icon: "🎯", title: "Técnicas de Venda", desc: "Perfil de cliente, objeções e fechamento", nivel: "Avançado" },
+      { id: 1, icon: "📚", title: "O que é Consórcio?", desc: "Fundamentos, história e como funciona" },
+      { id: 2, icon: "⚙️", title: "Como Funciona na Prática", desc: "Grupos, assembleias, contemplação" },
+      { id: 3, icon: "🏆", title: "Tipos de Lance", desc: "Lance livre, fixo, embutido e estratégias" },
+      { id: 4, icon: "📊", title: "Comparativo Financeiro", desc: "Consórcio vs Financiamento vs À Vista" },
+      { id: 5, icon: "🛡️", title: "Porto Seguro Consórcio", desc: "Produtos, diferenciais e regulamentação" },
+      { id: 6, icon: "🎯", title: "Técnicas de Venda", desc: "Perfil de cliente, objeções e fechamento" },
     ];
 
     const WELCOME = `Olá! 🎓 Seja muito bem-vindo à **Academia Porto Seguro Consórcio**!
 
-Sou o **Prof. Dr. Ricardo Mestre**, seu guia nessa jornada para se tornar um especialista de consórcio de alto nível.
-
-Fico muito feliz em saber que você está dando esse passo importante! O mercado de consórcio no Brasil movimenta **mais de R$300 bilhões** por ano — e quem domina esse conhecimento tem um diferencial enorme.
+Sou o **Prof. Dr. Ricardo Mestre**, seu guia nessa jornada.
 
 Aqui você pode:
-📚 **Estudar** pelos módulos ao lado — do básico ao avançado
-🎯 **Praticar** simulando atendimentos reais com clientes
+📚 **Estudar** pelos módulos ao lado
+🎯 **Praticar** simulando atendimentos reais
 ❓ **Perguntar** qualquer dúvida a qualquer momento
-🧪 **Fazer quizzes** para testar seu conhecimento
 
-**Por onde quer começar?** Clique em um módulo ou me diga o que mais te interessa agora! 🚀`;
+Por onde quer começar? 🚀`;
 
     function App() {
+      // Estado de Navegação (Chat vs Studio)
+      const [currentView, setCurrentView] = useState("chat"); 
+      const [sideOpen, setSideOpen] = useState(window.innerWidth > 700);
+      
+      // Estados do Chat
       const [messages, setMessages] = useState([{ role: "assistant", content: WELCOME }]);
       const [input, setInput] = useState("");
-      const [loading, setLoading] = useState(false);
+      const [loadingChat, setLoadingChat] = useState(false);
       const [activeModule, setActiveModule] = useState(null);
-      const [sideOpen, setSideOpen] = useState(window.innerWidth > 700);
       const bottomRef = useRef(null);
 
-      useEffect(() => {
-        bottomRef.current?.scrollIntoView({ behavior: "smooth" });
-      }, [messages, loading]);
+      // Estados do Studio AImagens
+      const [imagePrompt, setImagePrompt] = useState("");
+      const [aspectRatio, setAspectRatio] = useState("1:1");
+      const [isGenerating, setIsGenerating] = useState(false);
+      const [generatedImage, setGeneratedImage] = useState(null);
 
+      useEffect(() => {
+        if (currentView === "chat") {
+          bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+        }
+      }, [messages, loadingChat, currentView]);
+
+      // --- LÓGICA DO CHAT ---
       const sendMessage = async (text) => {
-        if (!text.trim() || loading) return;
-        
+        if (!text.trim() || loadingChat) return;
         const userMsg = { role: "user", content: text };
-        
-        // Pega o histórico atual e adiciona a nova mensagem do usuário
         const newMessages = [...messages, userMsg];
-        
         setMessages(newMessages);
         setInput("");
-        setLoading(true);
+        setLoadingChat(true);
 
         try {
-          // Chamando a nossa nova ponte segura na Vercel
           const response = await fetch('/api/chat', {
             method: 'POST',
-            headers: {
-              'Content-Type': 'application/json'
-            },
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ messages: newMessages })
           });
-
           const data = await response.json();
-
           if (response.ok) {
-            // Adiciona a resposta real da DeepSeek na tela
             setMessages((prev) => [...prev, { role: "assistant", content: data.reply }]);
           } else {
-            // Se der erro (ex: chave errada, sem saldo), avisa na tela
-            setMessages((prev) => [...prev, { role: "assistant", content: "❌ Ocorreu um erro: " + (data.error || "Tente novamente.") }]);
+            setMessages((prev) => [...prev, { role: "assistant", content: "❌ Erro: " + (data.error || "Tente novamente.") }]);
           }
         } catch (error) {
-          setMessages((prev) => [...prev, { role: "assistant", content: "❌ Erro de conexão com o servidor." }]);
+          setMessages((prev) => [...prev, { role: "assistant", content: "❌ Erro de conexão." }]);
         } finally {
-          setLoading(false);
+          setLoadingChat(false);
         }
       };
 
       const selectModule = async (mod) => {
+        setCurrentView("chat");
         setActiveModule(mod.id);
         if (window.innerWidth < 700) setSideOpen(false);
-        const prompt = `Módulo selecionado: "${mod.title}" — ${mod.desc}. Inicie a aula deste módulo.`;
-        await sendMessage(prompt);
+        await sendMessage(`Módulo selecionado: "${mod.title}". Faça um resumo direto e termine com uma pergunta.`);
+      };
+
+      // --- LÓGICA DO STUDIO AIMAGENS ---
+      const generateImage = async () => {
+        if (!imagePrompt.trim() || isGenerating) return;
+        setIsGenerating(true);
+        setGeneratedImage(null);
+
+        try {
+          const response = await fetch('/api/gerar-imagem', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ prompt: imagePrompt, aspect_ratio: aspectRatio })
+          });
+          const data = await response.json();
+          if (response.ok) {
+            setGeneratedImage(data.url);
+          } else {
+            alert("❌ Erro ao gerar imagem: " + (data.error || "Tente novamente."));
+          }
+        } catch (error) {
+          alert("❌ Erro de conexão com o servidor de imagens.");
+        } finally {
+          setIsGenerating(false);
+        }
       };
 
       const quickActions = [
-        { label: "📝 Me dê um quiz", msg: "Me dê um quiz rápido com 3 perguntas!" },
         { label: "🎭 Simular venda", msg: "Vamos simular uma venda!" },
         { label: "💰 Calcular exemplo", msg: "Me dê um exemplo prático de cálculo." },
-        { label: "❓ Dúvidas comuns", msg: "Quais as dúvidas comuns?" },
       ];
 
-      const renderContent = (text) => {
+      const renderChatContent = (text) => {
         return text.split("\n").map((line, i) => {
           const parts = line.split(/(\*\*[^*]+\*\*)/g);
           return (
             <p key={i} style={{ margin: "4px 0", lineHeight: 1.65 }}>
               {parts.map((part, j) =>
                 part.startsWith("**") && part.endsWith("**") ? (
-                  <strong key={j} style={{ color: "#fff", fontWeight: 700 }}>
-                    {part.slice(2, -2)}
-                  </strong>
+                  <strong key={j} style={{ color: "#fff", fontWeight: 700 }}>{part.slice(2, -2)}</strong>
                 ) : (
                   <span key={j}>{part}</span>
                 )
@@ -129,27 +158,38 @@ Aqui você pode:
       return (
         <div style={{ display: "flex", height: "100vh", background: "#080C18", fontFamily: "'Segoe UI', Roboto, sans-serif", overflow: "hidden" }}>
           
-          {/* Sidebar */}
+          {/* SIDEBAR */}
           <div style={{ width: sideOpen ? 280 : 0, minWidth: sideOpen ? 280 : 0, background: "linear-gradient(180deg, #0D1220 0%, #0A0E1A 100%)", borderRight: "1px solid rgba(255,255,255,0.07)", overflow: "hidden", transition: "all 0.3s ease", display: "flex", flexDirection: "column" }}>
             <div style={{ padding: "20px 16px 12px", borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
               <div style={{ background: "linear-gradient(135deg, #1565C0, #0D47A1)", borderRadius: 12, padding: "12px 14px", marginBottom: 12 }}>
                 <div style={{ fontSize: 10, color: "rgba(255,255,255,0.5)", textTransform: "uppercase", marginBottom: 3 }}>Porto Seguro</div>
-                <div style={{ fontSize: 15, fontWeight: 800, color: "#fff" }}>Academia Consórcio</div>
+                <div style={{ fontSize: 15, fontWeight: 800, color: "#fff" }}>Painel Especialista</div>
               </div>
             </div>
 
-            <div style={{ flex: 1, overflowY: "auto", padding: "8px 10px" }}>
+            <div style={{ flex: 1, overflowY: "auto", padding: "16px 10px" }}>
+              
+              {/* Botão Especial do Studio AI */}
+              <div style={{ fontSize: 11, fontWeight: "bold", color: "rgba(255,255,255,0.4)", textTransform: "uppercase", marginBottom: 8, paddingLeft: 10 }}>Criação</div>
+              <button
+                onClick={() => { setCurrentView("studio"); setActiveModule(null); if (window.innerWidth < 700) setSideOpen(false); }}
+                style={{ width: "100%", background: currentView === "studio" ? "linear-gradient(135deg, #8B5CF6, #6D28D9)" : "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 10, padding: "12px", cursor: "pointer", textAlign: "left", marginBottom: 24, color: "white", display: "flex", alignItems: "center", gap: 10, transition: "0.2s" }}
+              >
+                <span style={{ fontSize: 20 }}>🎨</span>
+                <div style={{ fontWeight: 600, fontSize: 14 }}>Studio AImagens</div>
+              </button>
+
+              <div style={{ fontSize: 11, fontWeight: "bold", color: "rgba(255,255,255,0.4)", textTransform: "uppercase", marginBottom: 8, paddingLeft: 10 }}>Treinamentos</div>
               {MODULES.map((mod) => (
                 <button
                   key={mod.id}
                   onClick={() => selectModule(mod)}
-                  style={{ width: "100%", background: activeModule === mod.id ? "rgba(21,101,192,0.25)" : "transparent", border: `1px solid ${activeModule === mod.id ? "rgba(21,101,192,0.5)" : "transparent"}`, borderRadius: 10, padding: "10px 12px", cursor: "pointer", textAlign: "left", marginBottom: 4, color: "white" }}
+                  style={{ width: "100%", background: activeModule === mod.id && currentView === "chat" ? "rgba(21,101,192,0.25)" : "transparent", border: `1px solid ${activeModule === mod.id && currentView === "chat" ? "rgba(21,101,192,0.5)" : "transparent"}`, borderRadius: 10, padding: "10px 12px", cursor: "pointer", textAlign: "left", marginBottom: 4, color: "white" }}
                 >
                   <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                     <span style={{ fontSize: 18 }}>{mod.icon}</span>
                     <div style={{ flex: 1 }}>
                       <div style={{ fontSize: 13, fontWeight: 600 }}>{mod.title}</div>
-                      <div style={{ fontSize: 11, color: "rgba(255,255,255,0.5)" }}>{mod.desc}</div>
                     </div>
                   </div>
                 </button>
@@ -157,57 +197,126 @@ Aqui você pode:
             </div>
           </div>
 
-          {/* Main chat */}
-          <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
+          {/* ÁREA PRINCIPAL */}
+          <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden", position: "relative" }}>
             
             {/* Top bar */}
             <div style={{ padding: "14px 20px", background: "rgba(255,255,255,0.02)", borderBottom: "1px solid rgba(255,255,255,0.06)", display: "flex", alignItems: "center", gap: 12 }}>
               <button onClick={() => setSideOpen(!sideOpen)} style={{ background: "none", border: "none", cursor: "pointer", color: "white", fontSize: 18 }}>☰</button>
-              <div>
-                <div style={{ fontWeight: 700, fontSize: 14, color: "#fff" }}>Prof. Dr. Ricardo Mestre</div>
-                <div style={{ fontSize: 11, color: "#34D399" }}>Especialista Porto Seguro</div>
-              </div>
+              {currentView === "chat" ? (
+                <div>
+                  <div style={{ fontWeight: 700, fontSize: 14, color: "#fff" }}>Prof. Dr. Ricardo Mestre</div>
+                  <div style={{ fontSize: 11, color: "#34D399" }}>Inteligência Artificial de Vendas</div>
+                </div>
+              ) : (
+                <div>
+                  <div style={{ fontWeight: 700, fontSize: 14, color: "#fff" }}>Studio AImagens</div>
+                  <div style={{ fontSize: 11, color: "#A78BFA" }}>Gerador de Artes e Banners</div>
+                </div>
+              )}
             </div>
 
-            {/* Messages */}
-            <div style={{ flex: 1, overflowY: "auto", padding: "20px 16px", display: "flex", flexDirection: "column", gap: 16 }}>
-              {messages.map((msg, i) => (
-                <div key={i} style={{ display: "flex", gap: 10, flexDirection: msg.role === "user" ? "row-reverse" : "row" }}>
-                  <div style={{ maxWidth: "75%", background: msg.role === "user" ? "#1565C0" : "rgba(255,255,255,0.06)", borderRadius: "12px", padding: "12px 16px", color: "white", fontSize: 14 }}>
-                    {renderContent(msg.content)}
+            {/* --- VISUALIZAÇÃO CHAT --- */}
+            {currentView === "chat" && (
+              <>
+                <div style={{ flex: 1, overflowY: "auto", padding: "20px 16px", display: "flex", flexDirection: "column", gap: 16 }}>
+                  {messages.map((msg, i) => (
+                    <div key={i} style={{ display: "flex", gap: 10, flexDirection: msg.role === "user" ? "row-reverse" : "row" }}>
+                      <div style={{ maxWidth: "80%", background: msg.role === "user" ? "#1565C0" : "rgba(255,255,255,0.06)", borderRadius: "12px", padding: "12px 16px", color: "white", fontSize: 14 }}>
+                        {renderChatContent(msg.content)}
+                      </div>
+                    </div>
+                  ))}
+                  {loadingChat && <div style={{ color: "rgba(255,255,255,0.5)", fontSize: 13, fontStyle: "italic" }}>Professor Ricardo está digitando...</div>}
+                  <div ref={bottomRef} />
+                </div>
+
+                {messages.length <= 1 && (
+                  <div style={{ padding: "0 16px 12px", display: "flex", gap: 8, flexWrap: "wrap" }}>
+                    {quickActions.map((q, i) => (
+                      <button key={i} onClick={() => sendMessage(q.msg)} style={{ background: "rgba(59,130,246,0.1)", border: "1px solid rgba(59,130,246,0.25)", borderRadius: 20, padding: "7px 14px", color: "#93C5FD", cursor: "pointer" }}>{q.label}</button>
+                    ))}
+                  </div>
+                )}
+
+                <div style={{ padding: "12px 16px", background: "rgba(255,255,255,0.02)" }}>
+                  <div style={{ display: "flex", gap: 10 }}>
+                    <input
+                      value={input}
+                      onChange={(e) => setInput(e.target.value)}
+                      onKeyDown={(e) => e.key === "Enter" && sendMessage(input)}
+                      placeholder="Faça uma pergunta ao professor..."
+                      style={{ flex: 1, padding: "12px", borderRadius: "8px", border: "1px solid rgba(255,255,255,0.2)", background: "rgba(0,0,0,0.2)", color: "white", outline: "none" }}
+                    />
+                    <button onClick={() => sendMessage(input)} style={{ padding: "10px 20px", borderRadius: "8px", background: "#1565C0", color: "white", border: "none", cursor: "pointer", fontWeight: "bold" }}>Enviar</button>
                   </div>
                 </div>
-              ))}
-              {loading && <div style={{ color: "white" }}>A pensar...</div>}
-              <div ref={bottomRef} />
-            </div>
-
-            {/* Quick actions */}
-            {messages.length <= 1 && (
-              <div style={{ padding: "0 16px 12px", display: "flex", gap: 8, flexWrap: "wrap" }}>
-                {quickActions.map((q, i) => (
-                  <button key={i} onClick={() => sendMessage(q.msg)} style={{ background: "rgba(59,130,246,0.1)", border: "1px solid rgba(59,130,246,0.25)", borderRadius: 20, padding: "7px 14px", color: "#93C5FD", cursor: "pointer" }}>
-                    {q.label}
-                  </button>
-                ))}
-              </div>
+              </>
             )}
 
-            {/* Input */}
-            <div style={{ padding: "12px 16px", background: "rgba(255,255,255,0.02)" }}>
-              <div style={{ display: "flex", gap: 10 }}>
-                <input
-                  value={input}
-                  onChange={(e) => setInput(e.target.value)}
-                  onKeyDown={(e) => e.key === "Enter" && sendMessage(input)}
-                  placeholder="Escreva a sua mensagem..."
-                  style={{ flex: 1, padding: "10px", borderRadius: "8px", border: "1px solid rgba(255,255,255,0.2)", background: "transparent", color: "white" }}
-                />
-                <button onClick={() => sendMessage(input)} style={{ padding: "10px 20px", borderRadius: "8px", background: "#1565C0", color: "white", border: "none", cursor: "pointer" }}>
-                  Enviar
-                </button>
+            {/* --- VISUALIZAÇÃO STUDIO AIMAGENS --- */}
+            {currentView === "studio" && (
+              <div style={{ flex: 1, overflowY: "auto", padding: "30px", display: "flex", flexDirection: "column", alignItems: "center" }}>
+                
+                <div style={{ width: "100%", maxWidth: 600, background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 16, padding: "24px" }}>
+                  <h2 style={{ margin: "0 0 8px 0", fontSize: 20, color: "#fff" }}>Crie sua Arte Profissional</h2>
+                  <p style={{ margin: "0 0 24px 0", fontSize: 14, color: "rgba(255,255,255,0.6)" }}>Descreva como você quer a imagem. O modelo Flux irá desenhá-la e pode até incluir textos na arte!</p>
+                  
+                  <label style={{ display: "block", marginBottom: 8, fontSize: 13, fontWeight: "bold", color: "#A78BFA" }}>DESCRIÇÃO DA IMAGEM (PROMPT)</label>
+                  <textarea 
+                    value={imagePrompt}
+                    onChange={(e) => setImagePrompt(e.target.value)}
+                    placeholder="Ex: Um copo de açaí com morangos e leite em pó em cima de uma mesa de madeira. Fotografia profissional. Ao lado, uma placa escrita 'PROMOÇÃO'."
+                    style={{ width: "100%", height: 100, padding: "12px", borderRadius: "8px", border: "1px solid rgba(255,255,255,0.2)", background: "rgba(0,0,0,0.3)", color: "white", resize: "none", outline: "none", marginBottom: 16, fontFamily: "inherit" }}
+                  />
+
+                  <div style={{ display: "flex", gap: 16, marginBottom: 24 }}>
+                    <div style={{ flex: 1 }}>
+                      <label style={{ display: "block", marginBottom: 8, fontSize: 13, fontWeight: "bold", color: "#A78BFA" }}>FORMATO (TAMANHO)</label>
+                      <select 
+                        value={aspectRatio} 
+                        onChange={(e) => setAspectRatio(e.target.value)}
+                        style={{ width: "100%", padding: "12px", borderRadius: "8px", border: "1px solid rgba(255,255,255,0.2)", background: "rgba(0,0,0,0.3)", color: "white", outline: "none", cursor: "pointer" }}
+                      >
+                        <option value="1:1">Quadrado (Post Feed / Catálogo)</option>
+                        <option value="9:16">Vertical (Instagram Stories / Reels)</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <button 
+                    onClick={generateImage}
+                    disabled={isGenerating}
+                    style={{ width: "100%", padding: "14px", borderRadius: "8px", background: isGenerating ? "#4C1D95" : "linear-gradient(135deg, #8B5CF6, #6D28D9)", color: "white", border: "none", cursor: isGenerating ? "not-allowed" : "pointer", fontWeight: "bold", fontSize: 16, transition: "0.2s" }}
+                  >
+                    {isGenerating ? "⏳ Gerando a sua arte (Pode levar uns 10s)..." : "✨ Gerar Imagem Agora"}
+                  </button>
+                </div>
+
+                {/* Resultado da Imagem */}
+                {generatedImage && (
+                  <div style={{ marginTop: 30, width: "100%", maxWidth: 600, textAlign: "center" }}>
+                    <h3 style={{ margin: "0 0 16px 0", color: "#34D399" }}>✅ Arte Gerada com Sucesso!</h3>
+                    <div style={{ background: "rgba(0,0,0,0.5)", padding: 10, borderRadius: 12, border: "1px solid rgba(255,255,255,0.1)" }}>
+                      <img 
+                        src={generatedImage} 
+                        alt="Arte Gerada" 
+                        style={{ maxWidth: "100%", maxHeight: "500px", borderRadius: 8, display: "block", margin: "0 auto" }} 
+                      />
+                    </div>
+                    <a 
+                      href={generatedImage} 
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      style={{ display: "inline-block", marginTop: 16, padding: "10px 24px", background: "rgba(255,255,255,0.1)", border: "1px solid rgba(255,255,255,0.3)", borderRadius: 20, color: "white", textDecoration: "none", fontWeight: "bold", transition: "0.2s" }}
+                    >
+                      ⬇️ Abrir Imagem para Salvar
+                    </a>
+                  </div>
+                )}
               </div>
-            </div>
+            )}
+            
           </div>
         </div>
       );
