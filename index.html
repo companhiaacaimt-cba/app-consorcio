@@ -2,25 +2,70 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>Academia & Studio AI</title>
   
-  <!-- Favicon do Escudo (Pode trocar o emoji se quiser) -->
   <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🛡️</text></svg>">
-  
-  <!-- Carregando React e Babel -->
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+
   <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
   <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
   
   <style>
-    body { margin: 0; padding: 0; background: #080C18; color: white; }
-    * { box-sizing: border-box; }
-    /* Estilização da barra de rolagem */
-    ::-webkit-scrollbar { width: 8px; }
+    :root {
+      --pk: #1565C0; 
+      --bg: #080C18; 
+      --cd: rgba(255,255,255,0.03); 
+      --tx: #ffffff; 
+      --navh: 66px;
+      --sb: env(safe-area-inset-bottom, 0px);
+    }
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    body { margin: 0; padding: 0; background: var(--bg); color: var(--tx); font-family: 'Roboto', sans-serif; overflow: hidden; }
+    ::-webkit-scrollbar { width: 6px; }
     ::-webkit-scrollbar-track { background: transparent; }
-    ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 4px; }
-    ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.2); }
+    ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 4px; }
+
+    .app-container { display: flex; height: 100vh; width: 100vw; overflow: hidden; }
+    .main-content { flex: 1; display: flex; flex-direction: column; overflow: hidden; position: relative; }
+    .content-scroll { flex: 1; overflow-y: auto; padding-bottom: 20px; }
+
+    .mobile-nav { display: none; }
+    .desktop-sidebar { width: 280px; min-width: 280px; background: linear-gradient(180deg, #0D1220 0%, #0A0E1A 100%); border-right: 1px solid rgba(255,255,255,0.07); display: flex; flex-direction: column; }
+
+    @media (max-width: 768px) {
+      .desktop-sidebar { display: none !important; }
+      .mobile-nav { display: block; }
+      .content-scroll { padding-bottom: calc(var(--navh) + var(--sb) + 20px); }
+    }
+
+    .nav-bar { position: fixed; bottom: 0; left: 0; right: 0; z-index: 60; background: rgba(13, 18, 32, 0.95); backdrop-filter: blur(16px); border-top: 1px solid rgba(255,255,255,0.09); padding-bottom: var(--sb); }
+    .nav-inner { display: flex; flex-direction: row; align-items: stretch; width: 100%; max-width: 512px; margin: 0 auto; height: var(--navh); }
+    .nb { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; color: #6b7280; background: none; border: none; cursor: pointer; padding: 6px 2px; transition: 0.2s; position: relative; }
+    .nb.on { color: var(--pk); }
+    .nb.on .ni { filter: drop-shadow(0 0 5px rgba(21,101,192,0.5)); }
+    .nb.on::after { content: ''; position: absolute; bottom: 0; left: 50%; transform: translateX(-50%); width: 20px; height: 3px; background: var(--pk); border-radius: 3px 3px 0 0; }
+    .ni { font-size: 20px; display: block; margin-bottom: 2px;}
+    .nl { font-size: 10px; font-weight: 700; text-transform: uppercase; }
+
+    .acc-popup { position: absolute; bottom: calc(100% + 8px); right: 8px; width: 240px; background: rgba(20,20,20,0.9); backdrop-filter: blur(24px); border: 1px solid rgba(255,255,255,0.1); border-radius: 16px; box-shadow: 0 -8px 32px rgba(0,0,0,0.5); padding: 8px 0; z-index: 300; display: flex; flex-direction: column; }
+    .acc-hd { padding: 8px 16px 5px; font-size: 9px; font-weight: 700; color: rgba(255,255,255,0.4); text-transform: uppercase; }
+    .acc-sep { height: 1px; background: rgba(255,255,255,0.08); margin: 4px 0; }
+    .acc-opt { display: flex; align-items: center; gap: 12px; padding: 12px 16px; background: none; border: none; color: #fff; font-size: 14px; cursor: pointer; text-align: left; }
+    .acc-opt:hover { background: rgba(255,255,255,0.1); }
+    
+    @keyframes fadeUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+    .animate-fade { animation: fadeUp 0.3s ease forwards; }
+
+    /* Estilo de upload */
+    .file-upload-label {
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+      padding: 10px 14px; background: rgba(255,255,255,0.05); border: 1px dashed rgba(255,255,255,0.3);
+      border-radius: 8px; cursor: pointer; color: #9CA3AF; font-size: 13px; transition: 0.2s; width: 100%;
+    }
+    .file-upload-label:hover { background: rgba(255,255,255,0.1); color: #fff; }
   </style>
 </head>
 <body>
@@ -38,290 +83,278 @@
       { id: 6, icon: "🎯", title: "Técnicas de Venda", desc: "Perfil de cliente, objeções e fechamento" },
     ];
 
-    const WELCOME = `Olá! 🎓 Seja muito bem-vindo à **Academia Porto Seguro Consórcio**!
-
-Sou o **Prof. Dr. Ricardo Mestre**, seu guia nessa jornada.
-
-Aqui você pode:
-📚 **Estudar** pelos módulos ao lado
-🎯 **Praticar** simulando atendimentos reais
-❓ **Perguntar** qualquer dúvida a qualquer momento
-
-Por onde quer começar? 🚀`;
+    const WELCOME = `Olá! 🎓 Seja muito bem-vindo à **Academia Porto Seguro Consórcio**!\n\nSou o **Prof. Dr. Ricardo Mestre**, seu guia nessa jornada.\n\nPor onde quer começar? 🚀`;
 
     function App() {
-      // Estado de Navegação (Chat vs Studio)
       const [currentView, setCurrentView] = useState("chat"); 
-      const [sideOpen, setSideOpen] = useState(window.innerWidth > 700);
+      const [accOpen, setAccOpen] = useState(false);
+      const [fontSize, setFontSize] = useState(100);
       
-      // Estados do Chat
       const [messages, setMessages] = useState([{ role: "assistant", content: WELCOME }]);
       const [input, setInput] = useState("");
       const [loadingChat, setLoadingChat] = useState(false);
       const [activeModule, setActiveModule] = useState(null);
       const bottomRef = useRef(null);
 
-      // Estados do Studio AImagens
+      // ESTADOS DO STUDIO AImagens
       const [imagePrompt, setImagePrompt] = useState("");
       const [aspectRatio, setAspectRatio] = useState("1:1");
+      const [referenceImage, setReferenceImage] = useState(null);
       const [isGenerating, setIsGenerating] = useState(false);
+      const [isEnhancing, setIsEnhancing] = useState(false);
       const [generatedImage, setGeneratedImage] = useState(null);
 
       useEffect(() => {
-        if (currentView === "chat") {
-          bottomRef.current?.scrollIntoView({ behavior: "smooth" });
-        }
+        if (currentView === "chat") bottomRef.current?.scrollIntoView({ behavior: "smooth" });
       }, [messages, loadingChat, currentView]);
 
-      // --- LÓGICA DO CHAT ---
       const sendMessage = async (text) => {
         if (!text.trim() || loadingChat) return;
         const userMsg = { role: "user", content: text };
-        const newMessages = [...messages, userMsg];
-        setMessages(newMessages);
+        setMessages(prev => [...prev, userMsg]);
         setInput("");
         setLoadingChat(true);
-
         try {
           const response = await fetch('/api/chat', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ messages: newMessages })
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ messages: [...messages, userMsg] })
           });
           const data = await response.json();
-          if (response.ok) {
-            setMessages((prev) => [...prev, { role: "assistant", content: data.reply }]);
-          } else {
-            setMessages((prev) => [...prev, { role: "assistant", content: "❌ Erro: " + (data.error || "Tente novamente.") }]);
-          }
+          if (response.ok) setMessages((prev) => [...prev, { role: "assistant", content: data.reply }]);
+          else setMessages((prev) => [...prev, { role: "assistant", content: "❌ Erro: " + (data.error || "Tente novamente.") }]);
         } catch (error) {
-          setMessages((prev) => [...prev, { role: "assistant", content: "❌ Erro de conexão." }]);
+          setMessages((prev) => [...prev, { role: "assistant", content: "❌ Erro de conexão com servidor." }]);
+        } finally { setLoadingChat(false); }
+      };
+
+      // FUNÇÃO: Melhorar Ideia (Copywriting IA)
+      const enhancePrompt = async () => {
+        if (!imagePrompt.trim() || isEnhancing) return;
+        setIsEnhancing(true);
+        try {
+          const response = await fetch('/api/melhorar-prompt', {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ prompt: imagePrompt })
+          });
+          const data = await response.json();
+          if (response.ok) setImagePrompt(data.enhancedPrompt);
+          else alert("❌ Erro ao melhorar: " + (data.error || "Tente novamente."));
+        } catch (error) {
+          alert("❌ Erro de conexão com a Inteligência Artificial.");
         } finally {
-          setLoadingChat(false);
+          setIsEnhancing(false);
         }
       };
 
-      const selectModule = async (mod) => {
-        setCurrentView("chat");
-        setActiveModule(mod.id);
-        if (window.innerWidth < 700) setSideOpen(false);
-        await sendMessage(`Módulo selecionado: "${mod.title}". Faça um resumo direto e termine com uma pergunta.`);
+      // FUNÇÃO: Lidar com o Upload de Imagem de Referência
+      const handleImageUpload = (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          setReferenceImage(reader.result); // Salva a imagem como base64
+        };
+        reader.readAsDataURL(file);
       };
 
-      // --- LÓGICA DO STUDIO AIMAGENS ---
       const generateImage = async () => {
         if (!imagePrompt.trim() || isGenerating) return;
         setIsGenerating(true);
         setGeneratedImage(null);
-
         try {
           const response = await fetch('/api/gerar-imagem', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ prompt: imagePrompt, aspect_ratio: aspectRatio })
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ prompt: imagePrompt, aspect_ratio: aspectRatio, reference_image: referenceImage })
           });
           const data = await response.json();
-          if (response.ok) {
-            setGeneratedImage(data.url);
-          } else {
-            alert("❌ Erro ao gerar imagem: " + (data.error || "Tente novamente."));
-          }
-        } catch (error) {
-          alert("❌ Erro de conexão com o servidor de imagens.");
-        } finally {
-          setIsGenerating(false);
-        }
+          if (response.ok) setGeneratedImage(data.url);
+          else alert("❌ Erro ao gerar: " + (data.error || "Verifique sua FAL_KEY."));
+        } catch (error) { alert("❌ Erro de conexão com a API de Imagens."); } 
+        finally { setIsGenerating(false); }
       };
 
-      const quickActions = [
-        { label: "🎭 Simular venda", msg: "Vamos simular uma venda!" },
-        { label: "💰 Calcular exemplo", msg: "Me dê um exemplo prático de cálculo." },
-      ];
+      const selectModule = async (mod) => {
+        setCurrentView("chat"); setActiveModule(mod.id);
+        await sendMessage(`Módulo selecionado: "${mod.title}". Faça um resumo direto e termine com uma pergunta.`);
+      };
+
+      const handleAccZoom = (dir) => {
+        setFontSize(prev => Math.min(Math.max(prev + dir, 80), 140));
+        setAccOpen(false);
+      };
 
       const renderChatContent = (text) => {
         return text.split("\n").map((line, i) => {
           const parts = line.split(/(\*\*[^*]+\*\*)/g);
           return (
-            <p key={i} style={{ margin: "4px 0", lineHeight: 1.65 }}>
-              {parts.map((part, j) =>
-                part.startsWith("**") && part.endsWith("**") ? (
-                  <strong key={j} style={{ color: "#fff", fontWeight: 700 }}>{part.slice(2, -2)}</strong>
-                ) : (
-                  <span key={j}>{part}</span>
-                )
-              )}
+            <p key={i} style={{ margin: "4px 0", lineHeight: 1.5 }}>
+              {parts.map((part, j) => part.startsWith("**") && part.endsWith("**") ? (<strong key={j} style={{ color: "#fff", fontWeight: 700 }}>{part.slice(2, -2)}</strong>) : (<span key={j}>{part}</span>))}
             </p>
           );
         });
       };
 
       return (
-        <div style={{ display: "flex", height: "100vh", background: "#080C18", fontFamily: "'Segoe UI', Roboto, sans-serif", overflow: "hidden" }}>
+        <div className="app-container" style={{ zoom: `${fontSize}%` }}>
           
-          {/* SIDEBAR */}
-          <div style={{ width: sideOpen ? 280 : 0, minWidth: sideOpen ? 280 : 0, background: "linear-gradient(180deg, #0D1220 0%, #0A0E1A 100%)", borderRight: "1px solid rgba(255,255,255,0.07)", overflow: "hidden", transition: "all 0.3s ease", display: "flex", flexDirection: "column" }}>
+          {/* SIDEBAR (Apenas Desktop) */}
+          <div className="desktop-sidebar">
             <div style={{ padding: "20px 16px 12px", borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
-              <div style={{ background: "linear-gradient(135deg, #1565C0, #0D47A1)", borderRadius: 12, padding: "12px 14px", marginBottom: 12 }}>
-                <div style={{ fontSize: 10, color: "rgba(255,255,255,0.5)", textTransform: "uppercase", marginBottom: 3 }}>Porto Seguro</div>
+              <div style={{ background: "linear-gradient(135deg, var(--pk), #0D47A1)", borderRadius: 12, padding: "12px 14px", marginBottom: 12 }}>
+                <div style={{ fontSize: 10, color: "rgba(255,255,255,0.6)", textTransform: "uppercase" }}>Porto Seguro</div>
                 <div style={{ fontSize: 15, fontWeight: 800, color: "#fff" }}>Painel Especialista</div>
               </div>
             </div>
-
             <div style={{ flex: 1, overflowY: "auto", padding: "16px 10px" }}>
-              
-              {/* Botão Especial do Studio AI */}
               <div style={{ fontSize: 11, fontWeight: "bold", color: "rgba(255,255,255,0.4)", textTransform: "uppercase", marginBottom: 8, paddingLeft: 10 }}>Criação</div>
-              <button
-                onClick={() => { setCurrentView("studio"); setActiveModule(null); if (window.innerWidth < 700) setSideOpen(false); }}
-                style={{ width: "100%", background: currentView === "studio" ? "linear-gradient(135deg, #8B5CF6, #6D28D9)" : "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 10, padding: "12px", cursor: "pointer", textAlign: "left", marginBottom: 24, color: "white", display: "flex", alignItems: "center", gap: 10, transition: "0.2s" }}
-              >
-                <span style={{ fontSize: 20 }}>🎨</span>
-                <div style={{ fontWeight: 600, fontSize: 14 }}>Studio AImagens</div>
+              <button onClick={() => { setCurrentView("studio"); setActiveModule(null); }} style={{ width: "100%", background: currentView === "studio" ? "linear-gradient(135deg, #8B5CF6, #6D28D9)" : "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 10, padding: "12px", cursor: "pointer", textAlign: "left", marginBottom: 24, color: "white", display: "flex", alignItems: "center", gap: 10 }}>
+                <span style={{ fontSize: 20 }}>🎨</span><div style={{ fontWeight: 600, fontSize: 14 }}>Studio AImagens</div>
               </button>
-
               <div style={{ fontSize: 11, fontWeight: "bold", color: "rgba(255,255,255,0.4)", textTransform: "uppercase", marginBottom: 8, paddingLeft: 10 }}>Treinamentos</div>
               {MODULES.map((mod) => (
-                <button
-                  key={mod.id}
-                  onClick={() => selectModule(mod)}
-                  style={{ width: "100%", background: activeModule === mod.id && currentView === "chat" ? "rgba(21,101,192,0.25)" : "transparent", border: `1px solid ${activeModule === mod.id && currentView === "chat" ? "rgba(21,101,192,0.5)" : "transparent"}`, borderRadius: 10, padding: "10px 12px", cursor: "pointer", textAlign: "left", marginBottom: 4, color: "white" }}
-                >
-                  <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                    <span style={{ fontSize: 18 }}>{mod.icon}</span>
-                    <div style={{ flex: 1 }}>
-                      <div style={{ fontSize: 13, fontWeight: 600 }}>{mod.title}</div>
-                    </div>
-                  </div>
+                <button key={mod.id} onClick={() => selectModule(mod)} style={{ width: "100%", background: activeModule === mod.id && currentView === "chat" ? "rgba(21,101,192,0.25)" : "transparent", border: `1px solid ${activeModule === mod.id && currentView === "chat" ? "rgba(21,101,192,0.5)" : "transparent"}`, borderRadius: 10, padding: "10px 12px", cursor: "pointer", textAlign: "left", marginBottom: 4, color: "white" }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 10 }}><span style={{ fontSize: 18 }}>{mod.icon}</span><div style={{ flex: 1 }}><div style={{ fontSize: 13, fontWeight: 600 }}>{mod.title}</div></div></div>
                 </button>
               ))}
             </div>
           </div>
 
-          {/* ÁREA PRINCIPAL */}
-          <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden", position: "relative" }}>
-            
-            {/* Top bar */}
+          <div className="main-content">
             <div style={{ padding: "14px 20px", background: "rgba(255,255,255,0.02)", borderBottom: "1px solid rgba(255,255,255,0.06)", display: "flex", alignItems: "center", gap: 12 }}>
-              <button onClick={() => setSideOpen(!sideOpen)} style={{ background: "none", border: "none", cursor: "pointer", color: "white", fontSize: 18 }}>☰</button>
-              {currentView === "chat" ? (
-                <div>
-                  <div style={{ fontWeight: 700, fontSize: 14, color: "#fff" }}>Prof. Dr. Ricardo Mestre</div>
-                  <div style={{ fontSize: 11, color: "#34D399" }}>Inteligência Artificial de Vendas</div>
-                </div>
-              ) : (
-                <div>
-                  <div style={{ fontWeight: 700, fontSize: 14, color: "#fff" }}>Studio AImagens</div>
-                  <div style={{ fontSize: 11, color: "#A78BFA" }}>Gerador de Artes e Banners</div>
-                </div>
-              )}
+              {currentView === "chat" && (<div><div style={{ fontWeight: 700, fontSize: 14, color: "#fff" }}>Prof. Dr. Ricardo Mestre</div><div style={{ fontSize: 11, color: "#34D399" }}>Inteligência Artificial de Vendas</div></div>)}
+              {currentView === "studio" && (<div><div style={{ fontWeight: 700, fontSize: 14, color: "#fff" }}>Studio AImagens</div><div style={{ fontSize: 11, color: "#A78BFA" }}>Gerador c/ Copywriting e Image-to-Image</div></div>)}
+              {currentView === "modules" && (<div><div style={{ fontWeight: 700, fontSize: 14, color: "#fff" }}>Módulos de Treinamento</div><div style={{ fontSize: 11, color: "var(--pk)" }}>Escolha uma aula</div></div>)}
             </div>
 
-            {/* --- VISUALIZAÇÃO CHAT --- */}
-            {currentView === "chat" && (
-              <>
-                <div style={{ flex: 1, overflowY: "auto", padding: "20px 16px", display: "flex", flexDirection: "column", gap: 16 }}>
+            <div className="content-scroll animate-fade">
+              
+              {/* --- VIEW: CHAT --- */}
+              {currentView === "chat" && (
+                <div style={{ padding: "20px 16px", display: "flex", flexDirection: "column", gap: 16 }}>
                   {messages.map((msg, i) => (
                     <div key={i} style={{ display: "flex", gap: 10, flexDirection: msg.role === "user" ? "row-reverse" : "row" }}>
-                      <div style={{ maxWidth: "80%", background: msg.role === "user" ? "#1565C0" : "rgba(255,255,255,0.06)", borderRadius: "12px", padding: "12px 16px", color: "white", fontSize: 14 }}>
+                      <div style={{ maxWidth: "85%", background: msg.role === "user" ? "var(--pk)" : "var(--cd)", border: msg.role === "user" ? "none" : "1px solid rgba(255,255,255,0.05)", borderRadius: "12px", padding: "12px 16px", color: "white", fontSize: 14 }}>
                         {renderChatContent(msg.content)}
                       </div>
                     </div>
                   ))}
-                  {loadingChat && <div style={{ color: "rgba(255,255,255,0.5)", fontSize: 13, fontStyle: "italic" }}>Professor Ricardo está digitando...</div>}
+                  {loadingChat && <div style={{ color: "rgba(255,255,255,0.5)", fontSize: 13, fontStyle: "italic" }}>Professor está digitando...</div>}
                   <div ref={bottomRef} />
                 </div>
+              )}
 
-                {messages.length <= 1 && (
-                  <div style={{ padding: "0 16px 12px", display: "flex", gap: 8, flexWrap: "wrap" }}>
-                    {quickActions.map((q, i) => (
-                      <button key={i} onClick={() => sendMessage(q.msg)} style={{ background: "rgba(59,130,246,0.1)", border: "1px solid rgba(59,130,246,0.25)", borderRadius: 20, padding: "7px 14px", color: "#93C5FD", cursor: "pointer" }}>{q.label}</button>
-                    ))}
-                  </div>
-                )}
-
-                <div style={{ padding: "12px 16px", background: "rgba(255,255,255,0.02)" }}>
-                  <div style={{ display: "flex", gap: 10 }}>
-                    <input
-                      value={input}
-                      onChange={(e) => setInput(e.target.value)}
-                      onKeyDown={(e) => e.key === "Enter" && sendMessage(input)}
-                      placeholder="Faça uma pergunta ao professor..."
-                      style={{ flex: 1, padding: "12px", borderRadius: "8px", border: "1px solid rgba(255,255,255,0.2)", background: "rgba(0,0,0,0.2)", color: "white", outline: "none" }}
+              {/* --- VIEW: STUDIO AIMAGENS --- */}
+              {currentView === "studio" && (
+                <div style={{ padding: "30px 16px", display: "flex", flexDirection: "column", alignItems: "center" }}>
+                  <div style={{ width: "100%", maxWidth: 600, background: "var(--cd)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 16, padding: "20px" }}>
+                    
+                    <h2 style={{ margin: "0 0 8px 0", fontSize: 18, color: "#fff" }}>Crie sua Arte Profissional</h2>
+                    <p style={{ margin: "0 0 16px 0", fontSize: 13, color: "rgba(255,255,255,0.6)" }}>Descreva a imagem ou deixe nossa IA aprimorar sua ideia para vendas.</p>
+                    
+                    {/* AREA DE TEXTO */}
+                    <textarea 
+                      value={imagePrompt} onChange={(e) => setImagePrompt(e.target.value)}
+                      placeholder="Ex: Um copo de açaí com morangos. Placa escrita 'OFERTA'."
+                      style={{ width: "100%", height: 120, padding: "12px", borderRadius: "8px", border: "1px solid rgba(255,255,255,0.2)", background: "rgba(0,0,0,0.3)", color: "white", resize: "none", outline: "none", marginBottom: 12, fontFamily: "inherit" }}
                     />
-                    <button onClick={() => sendMessage(input)} style={{ padding: "10px 20px", borderRadius: "8px", background: "#1565C0", color: "white", border: "none", cursor: "pointer", fontWeight: "bold" }}>Enviar</button>
+                    
+                    {/* BOTÃO DE MELHORAR PROMPT */}
+                    <button onClick={enhancePrompt} disabled={isEnhancing} style={{ width: "100%", padding: "10px", borderRadius: "8px", background: "rgba(16, 185, 129, 0.15)", color: "#34D399", border: "1px solid rgba(16, 185, 129, 0.4)", cursor: "pointer", fontWeight: "bold", fontSize: 13, marginBottom: 24, transition: "0.2s" }}>
+                      {isEnhancing ? "🧠 Melhorando sua ideia..." : "✨ Melhorar Ideia (Copywriting IA)"}
+                    </button>
+
+                    {/* UPLOAD DE IMAGEM */}
+                    <div style={{ marginBottom: 20 }}>
+                      <label style={{ display: "block", marginBottom: 8, fontSize: 12, fontWeight: "bold", color: "#A78BFA" }}>REFERÊNCIA DE IMAGEM (OPCIONAL)</label>
+                      {!referenceImage ? (
+                        <label className="file-upload-label">
+                          <i className="fas fa-upload"></i> Escolher foto base
+                          <input type="file" accept="image/*" onChange={handleImageUpload} style={{ display: "none" }} />
+                        </label>
+                      ) : (
+                        <div style={{ display: "flex", alignItems: "center", gap: 12, background: "rgba(0,0,0,0.3)", padding: 8, borderRadius: 8, border: "1px solid rgba(255,255,255,0.1)" }}>
+                          <img src={referenceImage} alt="Referência" style={{ width: 50, height: 50, objectFit: "cover", borderRadius: 4 }} />
+                          <div style={{ flex: 1, fontSize: 12, color: "#34D399" }}><i className="fas fa-check-circle"></i> Imagem carregada</div>
+                          <button onClick={() => setReferenceImage(null)} style={{ background: "none", border: "none", color: "#ef4444", cursor: "pointer", padding: "4px 8px" }}><i className="fas fa-trash"></i></button>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* FORMATO E BOTÃO GERAR */}
+                    <label style={{ display: "block", marginBottom: 8, fontSize: 12, fontWeight: "bold", color: "#A78BFA" }}>FORMATO</label>
+                    <select value={aspectRatio} onChange={(e) => setAspectRatio(e.target.value)}
+                      style={{ width: "100%", padding: "12px", borderRadius: "8px", border: "1px solid rgba(255,255,255,0.2)", background: "rgba(0,0,0,0.3)", color: "white", outline: "none", marginBottom: 20 }}>
+                      <option value="1:1">Quadrado (Feed / Catálogo)</option>
+                      <option value="9:16">Vertical (Stories / Reels)</option>
+                    </select>
+
+                    <button onClick={generateImage} disabled={isGenerating}
+                      style={{ width: "100%", padding: "14px", borderRadius: "8px", background: isGenerating ? "#4C1D95" : "linear-gradient(135deg, #8B5CF6, #6D28D9)", color: "white", border: "none", fontWeight: "bold", fontSize: 15, cursor: "pointer" }}>
+                      {isGenerating ? "⏳ Gerando arte..." : "🚀 Gerar Imagem Agora"}
+                    </button>
                   </div>
+
+                  {generatedImage && (
+                    <div style={{ marginTop: 24, width: "100%", maxWidth: 600, textAlign: "center" }}>
+                      <h3 style={{ margin: "0 0 12px 0", color: "#34D399", fontSize: 16 }}>✅ Arte Pronta!</h3>
+                      <img src={generatedImage} alt="Arte" style={{ width: "100%", borderRadius: 8, border: "1px solid rgba(255,255,255,0.2)", marginBottom: 12 }} />
+                      <a href={generatedImage} target="_blank" style={{ display: "inline-block", padding: "10px 20px", background: "rgba(255,255,255,0.1)", borderRadius: 20, color: "white", textDecoration: "none", fontSize: 13 }}>⬇️ Abrir e Salvar</a>
+                    </div>
+                  )}
                 </div>
-              </>
+              )}
+
+              {/* --- VIEW: MODULES (Mobile) --- */}
+              {currentView === "modules" && (
+                <div style={{ padding: "20px 16px", display: "flex", flexDirection: "column", gap: 12 }}>
+                  {MODULES.map((mod) => (
+                    <div key={mod.id} onClick={() => selectModule(mod)} style={{ background: "var(--cd)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 12, padding: "16px", display: "flex", alignItems: "center", gap: 16, cursor: "pointer" }}>
+                      <div style={{ fontSize: 28 }}>{mod.icon}</div>
+                      <div>
+                        <div style={{ fontSize: 15, fontWeight: "bold", color: "#fff" }}>{mod.title}</div>
+                        <div style={{ fontSize: 12, color: "rgba(255,255,255,0.5)", marginTop: 4 }}>{mod.desc}</div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* INPUT CHAT FIXO (Rodapé) */}
+            {currentView === "chat" && (
+              <div style={{ padding: "12px 16px", background: "var(--bg)", borderTop: "1px solid rgba(255,255,255,0.06)", zIndex: 10 }}>
+                <div style={{ display: "flex", gap: 10 }}>
+                  <input value={input} onChange={(e) => setInput(e.target.value)} onKeyDown={(e) => e.key === "Enter" && sendMessage(input)} placeholder="Sua mensagem..." style={{ flex: 1, padding: "12px", borderRadius: "8px", border: "1px solid rgba(255,255,255,0.2)", background: "rgba(0,0,0,0.3)", color: "white", outline: "none" }} />
+                  <button onClick={() => sendMessage(input)} style={{ padding: "0 20px", borderRadius: "8px", background: "var(--pk)", color: "white", border: "none", fontWeight: "bold", cursor: "pointer" }}><i className="fas fa-paper-plane"></i></button>
+                </div>
+              </div>
             )}
+          </div>
 
-            {/* --- VISUALIZAÇÃO STUDIO AIMAGENS --- */}
-            {currentView === "studio" && (
-              <div style={{ flex: 1, overflowY: "auto", padding: "30px", display: "flex", flexDirection: "column", alignItems: "center" }}>
-                
-                <div style={{ width: "100%", maxWidth: 600, background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 16, padding: "24px" }}>
-                  <h2 style={{ margin: "0 0 8px 0", fontSize: 20, color: "#fff" }}>Crie sua Arte Profissional</h2>
-                  <p style={{ margin: "0 0 24px 0", fontSize: 14, color: "rgba(255,255,255,0.6)" }}>Descreva como você quer a imagem. O modelo Flux irá desenhá-la e pode até incluir textos na arte!</p>
-                  
-                  <label style={{ display: "block", marginBottom: 8, fontSize: 13, fontWeight: "bold", color: "#A78BFA" }}>DESCRIÇÃO DA IMAGEM (PROMPT)</label>
-                  <textarea 
-                    value={imagePrompt}
-                    onChange={(e) => setImagePrompt(e.target.value)}
-                    placeholder="Ex: Um copo de açaí com morangos e leite em pó em cima de uma mesa de madeira. Fotografia profissional. Ao lado, uma placa escrita 'PROMOÇÃO'."
-                    style={{ width: "100%", height: 100, padding: "12px", borderRadius: "8px", border: "1px solid rgba(255,255,255,0.2)", background: "rgba(0,0,0,0.3)", color: "white", resize: "none", outline: "none", marginBottom: 16, fontFamily: "inherit" }}
-                  />
-
-                  <div style={{ display: "flex", gap: 16, marginBottom: 24 }}>
-                    <div style={{ flex: 1 }}>
-                      <label style={{ display: "block", marginBottom: 8, fontSize: 13, fontWeight: "bold", color: "#A78BFA" }}>FORMATO (TAMANHO)</label>
-                      <select 
-                        value={aspectRatio} 
-                        onChange={(e) => setAspectRatio(e.target.value)}
-                        style={{ width: "100%", padding: "12px", borderRadius: "8px", border: "1px solid rgba(255,255,255,0.2)", background: "rgba(0,0,0,0.3)", color: "white", outline: "none", cursor: "pointer" }}
-                      >
-                        <option value="1:1">Quadrado (Post Feed / Catálogo)</option>
-                        <option value="9:16">Vertical (Instagram Stories / Reels)</option>
-                      </select>
-                    </div>
-                  </div>
-
-                  <button 
-                    onClick={generateImage}
-                    disabled={isGenerating}
-                    style={{ width: "100%", padding: "14px", borderRadius: "8px", background: isGenerating ? "#4C1D95" : "linear-gradient(135deg, #8B5CF6, #6D28D9)", color: "white", border: "none", cursor: isGenerating ? "not-allowed" : "pointer", fontWeight: "bold", fontSize: 16, transition: "0.2s" }}
-                  >
-                    {isGenerating ? "⏳ Gerando a sua arte (Pode levar uns 10s)..." : "✨ Gerar Imagem Agora"}
-                  </button>
-                </div>
-
-                {/* Resultado da Imagem */}
-                {generatedImage && (
-                  <div style={{ marginTop: 30, width: "100%", maxWidth: 600, textAlign: "center" }}>
-                    <h3 style={{ margin: "0 0 16px 0", color: "#34D399" }}>✅ Arte Gerada com Sucesso!</h3>
-                    <div style={{ background: "rgba(0,0,0,0.5)", padding: 10, borderRadius: 12, border: "1px solid rgba(255,255,255,0.1)" }}>
-                      <img 
-                        src={generatedImage} 
-                        alt="Arte Gerada" 
-                        style={{ maxWidth: "100%", maxHeight: "500px", borderRadius: 8, display: "block", margin: "0 auto" }} 
-                      />
-                    </div>
-                    <a 
-                      href={generatedImage} 
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      style={{ display: "inline-block", marginTop: 16, padding: "10px 24px", background: "rgba(255,255,255,0.1)", border: "1px solid rgba(255,255,255,0.3)", borderRadius: 20, color: "white", textDecoration: "none", fontWeight: "bold", transition: "0.2s" }}
-                    >
-                      ⬇️ Abrir Imagem para Salvar
-                    </a>
+          {/* BOTTOM NAV (Mobile) */}
+          <nav className="mobile-nav nav-bar">
+            <div className="nav-inner">
+              <button onClick={() => setCurrentView("chat")} className={`nb ${currentView === "chat" ? "on" : ""}`}><i className="fas fa-robot ni"></i><span className="nl">Professor</span></button>
+              <button onClick={() => setCurrentView("modules")} className={`nb ${currentView === "modules" ? "on" : ""}`}><i className="fas fa-graduation-cap ni"></i><span className="nl">Treinos</span></button>
+              <button onClick={() => { setCurrentView("chat"); sendMessage("Vamos simular uma venda!"); }} className="nb"><i className="fas fa-handshake ni"></i><span className="nl">Simular</span></button>
+              <button onClick={() => setCurrentView("studio")} className={`nb ${currentView === "studio" ? "on" : ""}`}><i className="fas fa-paint-brush ni"></i><span className="nl">Studio AI</span></button>
+              <div style={{ flex: 1, display: "flex", position: "relative" }}>
+                <button onClick={() => setAccOpen(!accOpen)} className={`nb ${accOpen ? "on" : ""}`} style={{ width: "100%" }}><i className="fas fa-universal-access ni"></i><span className="nl">Acesso</span></button>
+                {accOpen && (
+                  <div className="acc-popup">
+                    <div className="acc-hd">Tamanho do Texto</div>
+                    <button onClick={() => handleAccZoom(10)} className="acc-opt"><i className="fas fa-plus-circle"></i> Aumentar</button>
+                    <button onClick={() => handleAccZoom(-10)} className="acc-opt"><i className="fas fa-minus-circle"></i> Diminuir</button>
+                    <div className="acc-sep"></div>
+                    <button onClick={() => { setFontSize(100); setAccOpen(false); }} className="acc-opt"><i className="fas fa-undo"></i> Redefinir</button>
                   </div>
                 )}
               </div>
-            )}
-            
-          </div>
+            </div>
+          </nav>
         </div>
       );
     }
-
     const root = ReactDOM.createRoot(document.getElementById('root'));
     root.render(<App />);
   </script>
