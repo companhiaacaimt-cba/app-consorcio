@@ -14,7 +14,7 @@ export default async function handler(req, res) {
       return res.status(500).json({ error: 'A chave da API (DEEPSEEK_API_KEY) não foi encontrada na Vercel.' });
     }
 
-    // Fazendo a chamada para a DeepSeek (o formato é idêntico ao da OpenAI)
+    // Fazendo a chamada para a DeepSeek
     const response = await fetch('https://api.deepseek.com/chat/completions', {
       method: 'POST',
       headers: {
@@ -22,14 +22,14 @@ export default async function handler(req, res) {
         'Authorization': `Bearer ${apiKey}`
       },
       body: JSON.stringify({
-        model: 'deepseek-chat', // Usa o modelo principal da DeepSeek
+        model: 'deepseek-chat',
         messages: [
-  { 
-    role: "system", 
-    content: "Você é o Prof. Dr. Ricardo Mestre. REGRA DE OURO: Responda em no máximo 3 parágrafos curtos. Seja direto e didático. Explique um conceito e sempre termine com uma pergunta curta para o aluno. Não use tabelas complexas." 
-  },
-  ...messages
-],
+          { 
+            role: "system", 
+            content: "Você é o Prof. Dr. Ricardo Mestre. REGRA DE OURO: Responda em no máximo 3 parágrafos curtos. Seja direto e didático. Explique um conceito e sempre termine com uma pergunta curta para o aluno. Não use tabelas complexas." 
+          },
+          ...messages
+        ],
         temperature: 0.7
       })
     });
