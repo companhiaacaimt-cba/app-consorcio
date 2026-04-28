@@ -59,12 +59,7 @@
     @keyframes fadeUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
     .animate-fade { animation: fadeUp 0.3s ease forwards; }
 
-    /* Estilo de upload */
-    .file-upload-label {
-      display: flex; align-items: center; justify-content: center; gap: 8px;
-      padding: 10px 14px; background: rgba(255,255,255,0.05); border: 1px dashed rgba(255,255,255,0.3);
-      border-radius: 8px; cursor: pointer; color: #9CA3AF; font-size: 13px; transition: 0.2s; width: 100%;
-    }
+    .file-upload-label { display: flex; align-items: center; justify-content: center; gap: 8px; padding: 10px 14px; background: rgba(255,255,255,0.05); border: 1px dashed rgba(255,255,255,0.3); border-radius: 8px; cursor: pointer; color: #9CA3AF; font-size: 13px; transition: 0.2s; width: 100%; }
     .file-upload-label:hover { background: rgba(255,255,255,0.1); color: #fff; }
   </style>
 </head>
@@ -96,7 +91,6 @@
       const [activeModule, setActiveModule] = useState(null);
       const bottomRef = useRef(null);
 
-      // ESTADOS DO STUDIO AImagens
       const [imagePrompt, setImagePrompt] = useState("");
       const [aspectRatio, setAspectRatio] = useState("1:1");
       const [referenceImage, setReferenceImage] = useState(null);
@@ -127,7 +121,6 @@
         } finally { setLoadingChat(false); }
       };
 
-      // FUNÇÃO: Melhorar Ideia (Copywriting IA)
       const enhancePrompt = async () => {
         if (!imagePrompt.trim() || isEnhancing) return;
         setIsEnhancing(true);
@@ -141,20 +134,42 @@
           else alert("❌ Erro ao melhorar: " + (data.error || "Tente novamente."));
         } catch (error) {
           alert("❌ Erro de conexão com a Inteligência Artificial.");
-        } finally {
-          setIsEnhancing(false);
-        }
+        } finally { setIsEnhancing(false); }
       };
 
-      // FUNÇÃO: Lidar com o Upload de Imagem de Referência
+      // COMPRESSOR DE IMAGEM: Reduz foto pesada do celular para evitar erro 413 da Vercel
       const handleImageUpload = (e) => {
         const file = e.target.files[0];
         if (!file) return;
+        
         const reader = new FileReader();
-        reader.onloadend = () => {
-          setReferenceImage(reader.result); // Salva a imagem como base64
+        reader.onload = (event) => {
+          const img = new Image();
+          img.onload = () => {
+            const canvas = document.createElement('canvas');
+            const MAX_WIDTH = 800;
+            const MAX_HEIGHT = 800;
+            let width = img.width;
+            let height = img.height;
+
+            if (width > height) {
+              if (width > MAX_WIDTH) { height *= MAX_WIDTH / width; width = MAX_WIDTH; }
+            } else {
+              if (height > MAX_HEIGHT) { width *= MAX_HEIGHT / height; height = MAX_HEIGHT; }
+            }
+            canvas.width = width;
+            canvas.height = height;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0, width, height);
+            
+            // Comprime a imagem para Base64 (Qualidade 0.8)
+            const compressedBase64 = canvas.toDataURL('image/jpeg', 0.8);
+            setReferenceImage(compressedBase64);
+          };
+          img.src = event.target.result;
         };
         reader.readAsDataURL(file);
+        e.target.value = ''; // Limpa o input
       };
 
       const generateImage = async () => {
@@ -178,10 +193,7 @@
         await sendMessage(`Módulo selecionado: "${mod.title}". Faça um resumo direto e termine com uma pergunta.`);
       };
 
-      const handleAccZoom = (dir) => {
-        setFontSize(prev => Math.min(Math.max(prev + dir, 80), 140));
-        setAccOpen(false);
-      };
+      const handleAccZoom = (dir) => { setFontSize(prev => Math.min(Math.max(prev + dir, 80), 140)); setAccOpen(false); };
 
       const renderChatContent = (text) => {
         return text.split("\n").map((line, i) => {
@@ -196,8 +208,6 @@
 
       return (
         <div className="app-container" style={{ zoom: `${fontSize}%` }}>
-          
-          {/* SIDEBAR (Apenas Desktop) */}
           <div className="desktop-sidebar">
             <div style={{ padding: "20px 16px 12px", borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
               <div style={{ background: "linear-gradient(135deg, var(--pk), #0D47A1)", borderRadius: 12, padding: "12px 14px", marginBottom: 12 }}>
@@ -227,8 +237,6 @@
             </div>
 
             <div className="content-scroll animate-fade">
-              
-              {/* --- VIEW: CHAT --- */}
               {currentView === "chat" && (
                 <div style={{ padding: "20px 16px", display: "flex", flexDirection: "column", gap: 16 }}>
                   {messages.map((msg, i) => (
@@ -243,53 +251,41 @@
                 </div>
               )}
 
-              {/* --- VIEW: STUDIO AIMAGENS --- */}
               {currentView === "studio" && (
                 <div style={{ padding: "30px 16px", display: "flex", flexDirection: "column", alignItems: "center" }}>
                   <div style={{ width: "100%", maxWidth: 600, background: "var(--cd)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 16, padding: "20px" }}>
-                    
                     <h2 style={{ margin: "0 0 8px 0", fontSize: 18, color: "#fff" }}>Crie sua Arte Profissional</h2>
                     <p style={{ margin: "0 0 16px 0", fontSize: 13, color: "rgba(255,255,255,0.6)" }}>Descreva a imagem ou deixe nossa IA aprimorar sua ideia para vendas.</p>
                     
-                    {/* AREA DE TEXTO */}
-                    <textarea 
-                      value={imagePrompt} onChange={(e) => setImagePrompt(e.target.value)}
-                      placeholder="Ex: Um copo de açaí com morangos. Placa escrita 'OFERTA'."
-                      style={{ width: "100%", height: 120, padding: "12px", borderRadius: "8px", border: "1px solid rgba(255,255,255,0.2)", background: "rgba(0,0,0,0.3)", color: "white", resize: "none", outline: "none", marginBottom: 12, fontFamily: "inherit" }}
-                    />
+                    <textarea value={imagePrompt} onChange={(e) => setImagePrompt(e.target.value)} placeholder="Ex: Um copo de açaí com morangos. Placa escrita 'OFERTA'." style={{ width: "100%", height: 120, padding: "12px", borderRadius: "8px", border: "1px solid rgba(255,255,255,0.2)", background: "rgba(0,0,0,0.3)", color: "white", resize: "none", outline: "none", marginBottom: 12, fontFamily: "inherit" }} />
                     
-                    {/* BOTÃO DE MELHORAR PROMPT */}
                     <button onClick={enhancePrompt} disabled={isEnhancing} style={{ width: "100%", padding: "10px", borderRadius: "8px", background: "rgba(16, 185, 129, 0.15)", color: "#34D399", border: "1px solid rgba(16, 185, 129, 0.4)", cursor: "pointer", fontWeight: "bold", fontSize: 13, marginBottom: 24, transition: "0.2s" }}>
                       {isEnhancing ? "🧠 Melhorando sua ideia..." : "✨ Melhorar Ideia (Copywriting IA)"}
                     </button>
 
-                    {/* UPLOAD DE IMAGEM */}
                     <div style={{ marginBottom: 20 }}>
                       <label style={{ display: "block", marginBottom: 8, fontSize: 12, fontWeight: "bold", color: "#A78BFA" }}>REFERÊNCIA DE IMAGEM (OPCIONAL)</label>
                       {!referenceImage ? (
                         <label className="file-upload-label">
-                          <i className="fas fa-upload"></i> Escolher foto base
+                          <i className="fas fa-upload"></i> Escolher foto base (Celular/PC)
                           <input type="file" accept="image/*" onChange={handleImageUpload} style={{ display: "none" }} />
                         </label>
                       ) : (
                         <div style={{ display: "flex", alignItems: "center", gap: 12, background: "rgba(0,0,0,0.3)", padding: 8, borderRadius: 8, border: "1px solid rgba(255,255,255,0.1)" }}>
                           <img src={referenceImage} alt="Referência" style={{ width: 50, height: 50, objectFit: "cover", borderRadius: 4 }} />
-                          <div style={{ flex: 1, fontSize: 12, color: "#34D399" }}><i className="fas fa-check-circle"></i> Imagem carregada</div>
+                          <div style={{ flex: 1, fontSize: 12, color: "#34D399" }}><i className="fas fa-check-circle"></i> Imagem carregada e comprimida</div>
                           <button onClick={() => setReferenceImage(null)} style={{ background: "none", border: "none", color: "#ef4444", cursor: "pointer", padding: "4px 8px" }}><i className="fas fa-trash"></i></button>
                         </div>
                       )}
                     </div>
 
-                    {/* FORMATO E BOTÃO GERAR */}
                     <label style={{ display: "block", marginBottom: 8, fontSize: 12, fontWeight: "bold", color: "#A78BFA" }}>FORMATO</label>
-                    <select value={aspectRatio} onChange={(e) => setAspectRatio(e.target.value)}
-                      style={{ width: "100%", padding: "12px", borderRadius: "8px", border: "1px solid rgba(255,255,255,0.2)", background: "rgba(0,0,0,0.3)", color: "white", outline: "none", marginBottom: 20 }}>
+                    <select value={aspectRatio} onChange={(e) => setAspectRatio(e.target.value)} style={{ width: "100%", padding: "12px", borderRadius: "8px", border: "1px solid rgba(255,255,255,0.2)", background: "rgba(0,0,0,0.3)", color: "white", outline: "none", marginBottom: 20 }}>
                       <option value="1:1">Quadrado (Feed / Catálogo)</option>
                       <option value="9:16">Vertical (Stories / Reels)</option>
                     </select>
 
-                    <button onClick={generateImage} disabled={isGenerating}
-                      style={{ width: "100%", padding: "14px", borderRadius: "8px", background: isGenerating ? "#4C1D95" : "linear-gradient(135deg, #8B5CF6, #6D28D9)", color: "white", border: "none", fontWeight: "bold", fontSize: 15, cursor: "pointer" }}>
+                    <button onClick={generateImage} disabled={isGenerating} style={{ width: "100%", padding: "14px", borderRadius: "8px", background: isGenerating ? "#4C1D95" : "linear-gradient(135deg, #8B5CF6, #6D28D9)", color: "white", border: "none", fontWeight: "bold", fontSize: 15, cursor: "pointer" }}>
                       {isGenerating ? "⏳ Gerando arte..." : "🚀 Gerar Imagem Agora"}
                     </button>
                   </div>
@@ -304,7 +300,6 @@
                 </div>
               )}
 
-              {/* --- VIEW: MODULES (Mobile) --- */}
               {currentView === "modules" && (
                 <div style={{ padding: "20px 16px", display: "flex", flexDirection: "column", gap: 12 }}>
                   {MODULES.map((mod) => (
@@ -320,7 +315,6 @@
               )}
             </div>
 
-            {/* INPUT CHAT FIXO (Rodapé) */}
             {currentView === "chat" && (
               <div style={{ padding: "12px 16px", background: "var(--bg)", borderTop: "1px solid rgba(255,255,255,0.06)", zIndex: 10 }}>
                 <div style={{ display: "flex", gap: 10 }}>
@@ -331,7 +325,6 @@
             )}
           </div>
 
-          {/* BOTTOM NAV (Mobile) */}
           <nav className="mobile-nav nav-bar">
             <div className="nav-inner">
               <button onClick={() => setCurrentView("chat")} className={`nb ${currentView === "chat" ? "on" : ""}`}><i className="fas fa-robot ni"></i><span className="nl">Professor</span></button>
