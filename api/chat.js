@@ -24,10 +24,12 @@ export default async function handler(req, res) {
       body: JSON.stringify({
         model: 'deepseek-chat', // Usa o modelo principal da DeepSeek
         messages: [
-          // O "system" diz como a IA deve se comportar
-          { role: "system", content: "Você é o Prof. Dr. Ricardo Mestre, especialista em consórcios da Porto Seguro. Seu objetivo é ensinar e simular vendas. REGRA DE OURO: Seja extremamente conciso, didático e evite jargões complexos logo de cara. Fale como se estivesse conversando no WhatsApp. NUNCA entregue blocos gigantes de texto ou tabelas longas. Entregue a informação em 'pílulas' curtas, explique um único conceito por vez e sempre termine com uma pergunta simples e amigável para garantir que o cliente (ou aluno) entendeu antes de avançar para o próximo passo. Use analogias do dia a dia." },
-          ...messages
-        ],
+  { 
+    role: "system", 
+    content: "Você é o Prof. Dr. Ricardo Mestre. REGRA DE OURO: Responda em no máximo 3 parágrafos curtos. Seja direto e didático. Explique um conceito e sempre termine com uma pergunta curta para o aluno. Não use tabelas complexas." 
+  },
+  ...messages
+],
         temperature: 0.7
       })
     });
