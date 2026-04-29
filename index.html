@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <title>Academia & Studio AI</title>
+  <title>Academia Consórcio</title>
   
   <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🛡️</text></svg>">
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
@@ -58,9 +58,6 @@
     
     @keyframes fadeUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
     .animate-fade { animation: fadeUp 0.3s ease forwards; }
-
-    .file-upload-label { display: flex; align-items: center; justify-content: center; gap: 8px; padding: 10px 14px; background: rgba(255,255,255,0.05); border: 1px dashed rgba(255,255,255,0.3); border-radius: 8px; cursor: pointer; color: #9CA3AF; font-size: 13px; transition: 0.2s; width: 100%; }
-    .file-upload-label:hover { background: rgba(255,255,255,0.1); color: #fff; }
   </style>
 </head>
 <body>
@@ -91,13 +88,6 @@
       const [activeModule, setActiveModule] = useState(null);
       const bottomRef = useRef(null);
 
-      const [imagePrompt, setImagePrompt] = useState("");
-      const [aspectRatio, setAspectRatio] = useState("1:1");
-      const [referenceImage, setReferenceImage] = useState(null);
-      const [isGenerating, setIsGenerating] = useState(false);
-      const [isEnhancing, setIsEnhancing] = useState(false);
-      const [generatedImage, setGeneratedImage] = useState(null);
-
       useEffect(() => {
         if (currentView === "chat") bottomRef.current?.scrollIntoView({ behavior: "smooth" });
       }, [messages, loadingChat, currentView]);
@@ -121,73 +111,6 @@
         } finally { setLoadingChat(false); }
       };
 
-      const enhancePrompt = async () => {
-        if (!imagePrompt.trim() || isEnhancing) return;
-        setIsEnhancing(true);
-        try {
-          const response = await fetch('/api/melhorar-prompt', {
-            method: 'POST', headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ prompt: imagePrompt })
-          });
-          const data = await response.json();
-          if (response.ok) setImagePrompt(data.enhancedPrompt);
-          else alert("❌ Erro ao melhorar: " + (data.error || "Tente novamente."));
-        } catch (error) {
-          alert("❌ Erro de conexão com a Inteligência Artificial.");
-        } finally { setIsEnhancing(false); }
-      };
-
-      // COMPRESSOR DE IMAGEM: Reduz foto pesada do celular para evitar erro 413 da Vercel
-      const handleImageUpload = (e) => {
-        const file = e.target.files[0];
-        if (!file) return;
-        
-        const reader = new FileReader();
-        reader.onload = (event) => {
-          const img = new Image();
-          img.onload = () => {
-            const canvas = document.createElement('canvas');
-            const MAX_WIDTH = 800;
-            const MAX_HEIGHT = 800;
-            let width = img.width;
-            let height = img.height;
-
-            if (width > height) {
-              if (width > MAX_WIDTH) { height *= MAX_WIDTH / width; width = MAX_WIDTH; }
-            } else {
-              if (height > MAX_HEIGHT) { width *= MAX_HEIGHT / height; height = MAX_HEIGHT; }
-            }
-            canvas.width = width;
-            canvas.height = height;
-            const ctx = canvas.getContext('2d');
-            ctx.drawImage(img, 0, 0, width, height);
-            
-            // Comprime a imagem para Base64 (Qualidade 0.8)
-            const compressedBase64 = canvas.toDataURL('image/jpeg', 0.8);
-            setReferenceImage(compressedBase64);
-          };
-          img.src = event.target.result;
-        };
-        reader.readAsDataURL(file);
-        e.target.value = ''; // Limpa o input
-      };
-
-      const generateImage = async () => {
-        if (!imagePrompt.trim() || isGenerating) return;
-        setIsGenerating(true);
-        setGeneratedImage(null);
-        try {
-          const response = await fetch('/api/gerar-imagem', {
-            method: 'POST', headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ prompt: imagePrompt, aspect_ratio: aspectRatio, reference_image: referenceImage })
-          });
-          const data = await response.json();
-          if (response.ok) setGeneratedImage(data.url);
-          else alert("❌ Erro ao gerar: " + (data.error || "Verifique sua FAL_KEY."));
-        } catch (error) { alert("❌ Erro de conexão com a API de Imagens."); } 
-        finally { setIsGenerating(false); }
-      };
-
       const selectModule = async (mod) => {
         setCurrentView("chat"); setActiveModule(mod.id);
         await sendMessage(`Módulo selecionado: "${mod.title}". Faça um resumo direto e termine com uma pergunta.`);
@@ -208,6 +131,8 @@
 
       return (
         <div className="app-container" style={{ zoom: `${fontSize}%` }}>
+          
+          {/* SIDEBAR (Apenas Desktop) */}
           <div className="desktop-sidebar">
             <div style={{ padding: "20px 16px 12px", borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
               <div style={{ background: "linear-gradient(135deg, var(--pk), #0D47A1)", borderRadius: 12, padding: "12px 14px", marginBottom: 12 }}>
@@ -216,10 +141,6 @@
               </div>
             </div>
             <div style={{ flex: 1, overflowY: "auto", padding: "16px 10px" }}>
-              <div style={{ fontSize: 11, fontWeight: "bold", color: "rgba(255,255,255,0.4)", textTransform: "uppercase", marginBottom: 8, paddingLeft: 10 }}>Criação</div>
-              <button onClick={() => { setCurrentView("studio"); setActiveModule(null); }} style={{ width: "100%", background: currentView === "studio" ? "linear-gradient(135deg, #8B5CF6, #6D28D9)" : "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 10, padding: "12px", cursor: "pointer", textAlign: "left", marginBottom: 24, color: "white", display: "flex", alignItems: "center", gap: 10 }}>
-                <span style={{ fontSize: 20 }}>🎨</span><div style={{ fontWeight: 600, fontSize: 14 }}>Studio AImagens</div>
-              </button>
               <div style={{ fontSize: 11, fontWeight: "bold", color: "rgba(255,255,255,0.4)", textTransform: "uppercase", marginBottom: 8, paddingLeft: 10 }}>Treinamentos</div>
               {MODULES.map((mod) => (
                 <button key={mod.id} onClick={() => selectModule(mod)} style={{ width: "100%", background: activeModule === mod.id && currentView === "chat" ? "rgba(21,101,192,0.25)" : "transparent", border: `1px solid ${activeModule === mod.id && currentView === "chat" ? "rgba(21,101,192,0.5)" : "transparent"}`, borderRadius: 10, padding: "10px 12px", cursor: "pointer", textAlign: "left", marginBottom: 4, color: "white" }}>
@@ -232,11 +153,12 @@
           <div className="main-content">
             <div style={{ padding: "14px 20px", background: "rgba(255,255,255,0.02)", borderBottom: "1px solid rgba(255,255,255,0.06)", display: "flex", alignItems: "center", gap: 12 }}>
               {currentView === "chat" && (<div><div style={{ fontWeight: 700, fontSize: 14, color: "#fff" }}>Prof. Dr. Ricardo Mestre</div><div style={{ fontSize: 11, color: "#34D399" }}>Inteligência Artificial de Vendas</div></div>)}
-              {currentView === "studio" && (<div><div style={{ fontWeight: 700, fontSize: 14, color: "#fff" }}>Studio AImagens</div><div style={{ fontSize: 11, color: "#A78BFA" }}>Gerador c/ Copywriting e Image-to-Image</div></div>)}
               {currentView === "modules" && (<div><div style={{ fontWeight: 700, fontSize: 14, color: "#fff" }}>Módulos de Treinamento</div><div style={{ fontSize: 11, color: "var(--pk)" }}>Escolha uma aula</div></div>)}
             </div>
 
             <div className="content-scroll animate-fade">
+              
+              {/* --- VIEW: CHAT --- */}
               {currentView === "chat" && (
                 <div style={{ padding: "20px 16px", display: "flex", flexDirection: "column", gap: 16 }}>
                   {messages.map((msg, i) => (
@@ -251,55 +173,7 @@
                 </div>
               )}
 
-              {currentView === "studio" && (
-                <div style={{ padding: "30px 16px", display: "flex", flexDirection: "column", alignItems: "center" }}>
-                  <div style={{ width: "100%", maxWidth: 600, background: "var(--cd)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 16, padding: "20px" }}>
-                    <h2 style={{ margin: "0 0 8px 0", fontSize: 18, color: "#fff" }}>Crie sua Arte Profissional</h2>
-                    <p style={{ margin: "0 0 16px 0", fontSize: 13, color: "rgba(255,255,255,0.6)" }}>Descreva a imagem ou deixe nossa IA aprimorar sua ideia para vendas.</p>
-                    
-                    <textarea value={imagePrompt} onChange={(e) => setImagePrompt(e.target.value)} placeholder="Ex: Um copo de açaí com morangos. Placa escrita 'OFERTA'." style={{ width: "100%", height: 120, padding: "12px", borderRadius: "8px", border: "1px solid rgba(255,255,255,0.2)", background: "rgba(0,0,0,0.3)", color: "white", resize: "none", outline: "none", marginBottom: 12, fontFamily: "inherit" }} />
-                    
-                    <button onClick={enhancePrompt} disabled={isEnhancing} style={{ width: "100%", padding: "10px", borderRadius: "8px", background: "rgba(16, 185, 129, 0.15)", color: "#34D399", border: "1px solid rgba(16, 185, 129, 0.4)", cursor: "pointer", fontWeight: "bold", fontSize: 13, marginBottom: 24, transition: "0.2s" }}>
-                      {isEnhancing ? "🧠 Melhorando sua ideia..." : "✨ Melhorar Ideia (Copywriting IA)"}
-                    </button>
-
-                    <div style={{ marginBottom: 20 }}>
-                      <label style={{ display: "block", marginBottom: 8, fontSize: 12, fontWeight: "bold", color: "#A78BFA" }}>REFERÊNCIA DE IMAGEM (OPCIONAL)</label>
-                      {!referenceImage ? (
-                        <label className="file-upload-label">
-                          <i className="fas fa-upload"></i> Escolher foto base (Celular/PC)
-                          <input type="file" accept="image/*" onChange={handleImageUpload} style={{ display: "none" }} />
-                        </label>
-                      ) : (
-                        <div style={{ display: "flex", alignItems: "center", gap: 12, background: "rgba(0,0,0,0.3)", padding: 8, borderRadius: 8, border: "1px solid rgba(255,255,255,0.1)" }}>
-                          <img src={referenceImage} alt="Referência" style={{ width: 50, height: 50, objectFit: "cover", borderRadius: 4 }} />
-                          <div style={{ flex: 1, fontSize: 12, color: "#34D399" }}><i className="fas fa-check-circle"></i> Imagem carregada e comprimida</div>
-                          <button onClick={() => setReferenceImage(null)} style={{ background: "none", border: "none", color: "#ef4444", cursor: "pointer", padding: "4px 8px" }}><i className="fas fa-trash"></i></button>
-                        </div>
-                      )}
-                    </div>
-
-                    <label style={{ display: "block", marginBottom: 8, fontSize: 12, fontWeight: "bold", color: "#A78BFA" }}>FORMATO</label>
-                    <select value={aspectRatio} onChange={(e) => setAspectRatio(e.target.value)} style={{ width: "100%", padding: "12px", borderRadius: "8px", border: "1px solid rgba(255,255,255,0.2)", background: "rgba(0,0,0,0.3)", color: "white", outline: "none", marginBottom: 20 }}>
-                      <option value="1:1">Quadrado (Feed / Catálogo)</option>
-                      <option value="9:16">Vertical (Stories / Reels)</option>
-                    </select>
-
-                    <button onClick={generateImage} disabled={isGenerating} style={{ width: "100%", padding: "14px", borderRadius: "8px", background: isGenerating ? "#4C1D95" : "linear-gradient(135deg, #8B5CF6, #6D28D9)", color: "white", border: "none", fontWeight: "bold", fontSize: 15, cursor: "pointer" }}>
-                      {isGenerating ? "⏳ Gerando arte..." : "🚀 Gerar Imagem Agora"}
-                    </button>
-                  </div>
-
-                  {generatedImage && (
-                    <div style={{ marginTop: 24, width: "100%", maxWidth: 600, textAlign: "center" }}>
-                      <h3 style={{ margin: "0 0 12px 0", color: "#34D399", fontSize: 16 }}>✅ Arte Pronta!</h3>
-                      <img src={generatedImage} alt="Arte" style={{ width: "100%", borderRadius: 8, border: "1px solid rgba(255,255,255,0.2)", marginBottom: 12 }} />
-                      <a href={generatedImage} target="_blank" style={{ display: "inline-block", padding: "10px 20px", background: "rgba(255,255,255,0.1)", borderRadius: 20, color: "white", textDecoration: "none", fontSize: 13 }}>⬇️ Abrir e Salvar</a>
-                    </div>
-                  )}
-                </div>
-              )}
-
+              {/* --- VIEW: MODULES (Mobile) --- */}
               {currentView === "modules" && (
                 <div style={{ padding: "20px 16px", display: "flex", flexDirection: "column", gap: 12 }}>
                   {MODULES.map((mod) => (
@@ -315,6 +189,7 @@
               )}
             </div>
 
+            {/* INPUT CHAT FIXO (Rodapé) */}
             {currentView === "chat" && (
               <div style={{ padding: "12px 16px", background: "var(--bg)", borderTop: "1px solid rgba(255,255,255,0.06)", zIndex: 10 }}>
                 <div style={{ display: "flex", gap: 10 }}>
@@ -325,12 +200,12 @@
             )}
           </div>
 
+          {/* BOTTOM NAV (Mobile) - Ajustada para 4 botões */}
           <nav className="mobile-nav nav-bar">
             <div className="nav-inner">
               <button onClick={() => setCurrentView("chat")} className={`nb ${currentView === "chat" ? "on" : ""}`}><i className="fas fa-robot ni"></i><span className="nl">Professor</span></button>
               <button onClick={() => setCurrentView("modules")} className={`nb ${currentView === "modules" ? "on" : ""}`}><i className="fas fa-graduation-cap ni"></i><span className="nl">Treinos</span></button>
               <button onClick={() => { setCurrentView("chat"); sendMessage("Vamos simular uma venda!"); }} className="nb"><i className="fas fa-handshake ni"></i><span className="nl">Simular</span></button>
-              <button onClick={() => setCurrentView("studio")} className={`nb ${currentView === "studio" ? "on" : ""}`}><i className="fas fa-paint-brush ni"></i><span className="nl">Studio AI</span></button>
               <div style={{ flex: 1, display: "flex", position: "relative" }}>
                 <button onClick={() => setAccOpen(!accOpen)} className={`nb ${accOpen ? "on" : ""}`} style={{ width: "100%" }}><i className="fas fa-universal-access ni"></i><span className="nl">Acesso</span></button>
                 {accOpen && (
