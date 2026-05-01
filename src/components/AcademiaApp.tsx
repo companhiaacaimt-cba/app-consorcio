@@ -336,7 +336,7 @@ export default function AcademiaApp() {
               quickActions={QUICK_ACTIONS}
               currentMode={currentMode}
               setCurrentMode={setCurrentMode}
-              activeSub={activeSub}
+              activeSub={activeSub ?? null}
               updateProgress={updateProgress}
             />
           )}
