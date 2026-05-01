@@ -89,7 +89,7 @@ export default function AcademiaApp() {
   const completedSubs = allSubs.filter(s => progress[s.id]?.done).length;
   const startedSubs = allSubs.filter(s => progress[s.id]?.started && !progress[s.id]?.done).length;
   const activeMod = activeSubId ? MODULES.find(m => m.subs.some(s => s.id === activeSubId)) : null;
-  const activeSub = activeSubId ? allSubs.find(s => s.id === activeSubId) : null;
+  const activeSub: SubSection | null = activeSubId ? (allSubs.find(s => s.id === activeSubId) ?? null) : null;
 
   const updateProgress = useCallback((subId: string, patch: Partial<{ started: boolean; done: boolean }>) => {
     setProgress(p => {
