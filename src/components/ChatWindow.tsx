@@ -1,6 +1,6 @@
 'use client';
 import { useRef, useEffect } from 'react';
-import { Message, SubSection, UserProgress } from '@/lib/types';
+import { Message, SubSection } from '@/lib/types';
 
 function Markdown({ text }: { text: string }) {
   return (

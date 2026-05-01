@@ -19,11 +19,11 @@ function loadStorage<T>(key: string, fallback: T): T {
   try {
     const v = localStorage.getItem(key);
     return v ? JSON.parse(v) : fallback;
-  } catch { return fallback; }
+  } catch (_e) { return fallback; }
 }
 
 function saveStorage(key: string, value: unknown) {
-  try { localStorage.setItem(key, JSON.stringify(value)); } catch {}
+  try { localStorage.setItem(key, JSON.stringify(value)); } catch (_e) { /* ignore */ }
 }
 
 export type TabType = 'chat' | 'modules' | 'progress' | 'notes';
@@ -88,11 +88,9 @@ export default function AcademiaApp() {
   const allSubs = MODULES.flatMap(m => m.subs);
   const completedSubs = allSubs.filter(s => progress[s.id]?.done).length;
   const startedSubs = allSubs.filter(s => progress[s.id]?.started && !progress[s.id]?.done).length;
-  const activeMod = activeSubId ? MODULES.find(m => m.subs.some(s => s.id === activeSubId)) : null;
-  const activeSub: SubSection | null =
-  activeSubId
-    ? (allSubs.find((s) => s.id === activeSubId) || null)
-    : null;
+  const activeMod: Module | null = activeSubId ? (MODULES.find(m => m.subs.some(s => s.id === activeSubId)) ?? null) : null;
+  const activeSub: SubSection | null = activeSubId ? (allSubs.find(s => s.id === activeSubId) ?? null) : null;
+
   const updateProgress = useCallback((subId: string, patch: Partial<{ started: boolean; done: boolean }>) => {
     setProgress(p => {
       const updated = { ...p, [subId]: { ...p[subId], ...patch } };
@@ -128,7 +126,7 @@ export default function AcademiaApp() {
       } else {
         setMessages(prev => [...(prev ?? []), { role: 'assistant', content: `❌ ${data.error ?? 'Erro ao conectar com a IA.'}` }]);
       }
-    } catch {
+    } catch (_e) {
       setMessages(prev => [...(prev ?? []), { role: 'assistant', content: '❌ Erro de conexão. Verifique sua internet.' }]);
     } finally {
       setLoading(false);
@@ -186,7 +184,7 @@ export default function AcademiaApp() {
       if (decoded.profile) { setProfile(decoded.profile); saveStorage(STORAGE.profile, decoded.profile); }
       setSyncStatus('success');
       setTimeout(() => { setShowSyncModal(false); setSyncStatus(''); setImportInput(''); }, 1800);
-    } catch { setSyncStatus('error'); }
+    } catch (_e) { setSyncStatus('error'); }
   };
 
   if (!ready) return (
@@ -338,7 +336,7 @@ export default function AcademiaApp() {
               quickActions={QUICK_ACTIONS}
               currentMode={currentMode}
               setCurrentMode={setCurrentMode}
-              activeSub={activeSub ?? null}
+              activeSub={activeSub}
               updateProgress={updateProgress}
             />
           )}
